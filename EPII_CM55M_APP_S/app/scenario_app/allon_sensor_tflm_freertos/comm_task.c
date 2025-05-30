@@ -56,9 +56,7 @@
 #include "evt_i2ccomm.h"
 #include "app_msg.h"
 #include "app_state.h"
-#include "dp_task.h"
 #include "comm_task.h"
-#include "algo_task.h"
 #include "allon_sensor_tflm.h"
 
 #define DBG_EVT_IICS_CMD_LOG             (1)

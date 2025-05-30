@@ -9,9 +9,9 @@
                     "PATH": "/usr/bin:/home/hig/dev/arm-gnu-toolchain-13.2.Rel1-x86_64-arm-none-eabi/bin"
                 }
             },
-            "label": "GNUArm build EPII_CM55M_APP_S",
+            "label": "GNUArm build firmware EPII_CM55M_APP_S",
             "type": "shell",
-            "command": "cd /home/hig/src/edgebench/micro_client/grove_vision_ai_v2/EPII_CM55M_APP_S && make all && cd ../we2_image_gen_local/ && cp ../EPII_CM55M_APP_S/obj_epii_evb_icv30_bdv10/gnu_epii_evb_WLCSP65/EPII_CM55M_gnu_epii_evb_WLCSP65_s.elf input_case1_secboot/ && ./we2_local_image_gen project_case1_blp_wlcsp.json",
+            "command": "cd /home/hig/src/edgebench/micro_client/grove_vision_ai_v2/EPII_CM55M_APP_S && make all -j$(nproc --ignore=8) && cd ../we2_image_gen_local/ && cp ../EPII_CM55M_APP_S/obj_epii_evb_icv30_bdv10/gnu_epii_evb_WLCSP65/EPII_CM55M_gnu_epii_evb_WLCSP65_s.elf input_case1_secboot/ && ./we2_local_image_gen project_case1_blp_wlcsp.json",
             "group": {
                 "kind": "build",
                 "isDefault": true
@@ -38,9 +38,38 @@
                     "PATH": "/usr/bin:/home/hig/dev/arm-gnu-toolchain-13.2.Rel1-x86_64-arm-none-eabi/bin"
                 }
             },
+            "label": "GNUArm build EPII_CM55M_APP_S",
+            "type": "shell",
+            "command": "cd /home/hig/src/edgebench/micro_client/grove_vision_ai_v2/EPII_CM55M_APP_S && make all -j$(nproc --ignore=8)",
+            "group": {
+                "kind": "build",
+                "isDefault": false
+            },
+            "problemMatcher": {
+                "base": "$gcc",
+                "fileLocation": [
+                    "autoDetect",
+                    "/home/hig/src/edgebench/micro_client/grove_vision_ai_v2/EPII_CM55M_APP_S"
+                ]
+            },
+            "presentation": {
+                "reveal": "always",
+                "panel": "shared",
+                "focus": true
+            }
+        },
+        {
+            "options": {
+                "env": {
+                    "TOOLCHAIN": "gnu",
+                    "INCLUDE": "/home/hig/dev/arm-gnu-toolchain-13.2.Rel1-x86_64-arm-none-eabi/arm-none-eabi/include",
+                    "LIB": "/home/hig/dev/arm-gnu-toolchain-13.2.Rel1-x86_64-arm-none-eabi//lib/gcc/arm-none-eabi/13.2.1",
+                    "PATH": "/usr/bin:/home/hig/dev/arm-gnu-toolchain-13.2.Rel1-x86_64-arm-none-eabi/bin"
+                }
+            },
             "label": "GNUArm clean build EPII_CM55M_APP_S",
             "type": "shell",
-            "command": "cd /home/hig/src/edgebench/micro_client/grove_vision_ai_v2/EPII_CM55M_APP_S && make clean && make all && cd ../we2_image_gen_local/ && cp ../EPII_CM55M_APP_S/obj_epii_evb_icv30_bdv10/gnu_epii_evb_WLCSP65/EPII_CM55M_gnu_epii_evb_WLCSP65_s.elf input_case1_secboot/ && ./we2_local_image_gen project_case1_blp_wlcsp.json",
+            "command": "cd /home/hig/src/edgebench/micro_client/grove_vision_ai_v2/EPII_CM55M_APP_S && make clean && make all -j$(nproc --ignore=4)",
             "group": {
                 "kind": "build",
                 "isDefault": false
