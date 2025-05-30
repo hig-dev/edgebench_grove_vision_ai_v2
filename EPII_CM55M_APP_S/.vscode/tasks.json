@@ -11,7 +11,7 @@
             },
             "label": "GNUArm build EPII_CM55M_APP_S",
             "type": "shell",
-            "command": "cd /home/hig/src/edgebench/micro_client/grove_vision_ai_v2/EPII_CM55M_APP_S && make all",
+            "command": "cd /home/hig/src/edgebench/micro_client/grove_vision_ai_v2/EPII_CM55M_APP_S && make all && cd ../we2_image_gen_local/ && cp ../EPII_CM55M_APP_S/obj_epii_evb_icv30_bdv10/gnu_epii_evb_WLCSP65/EPII_CM55M_gnu_epii_evb_WLCSP65_s.elf input_case1_secboot/ && ./we2_local_image_gen project_case1_blp_wlcsp.json",
             "group": {
                 "kind": "build",
                 "isDefault": true
@@ -40,7 +40,7 @@
             },
             "label": "GNUArm clean build EPII_CM55M_APP_S",
             "type": "shell",
-            "command": "cd /home/hig/src/edgebench/micro_client/grove_vision_ai_v2/EPII_CM55M_APP_S && make clean && make all",
+            "command": "cd /home/hig/src/edgebench/micro_client/grove_vision_ai_v2/EPII_CM55M_APP_S && make clean && make all && cd ../we2_image_gen_local/ && cp ../EPII_CM55M_APP_S/obj_epii_evb_icv30_bdv10/gnu_epii_evb_WLCSP65/EPII_CM55M_gnu_epii_evb_WLCSP65_s.elf input_case1_secboot/ && ./we2_local_image_gen project_case1_blp_wlcsp.json",
             "group": {
                 "kind": "build",
                 "isDefault": false
