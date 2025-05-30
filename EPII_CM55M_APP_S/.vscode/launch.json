@@ -2,12 +2,12 @@
     "configurations": [
         {
             "preLaunchTask": "",
-            "cwd": "/home/steve/Seeed_Grove_Vision_AI_Module_V2/EPII_CM55M_APP_S",
+            "cwd": "/home/hig/src/edgebench/micro_client/grove_vision_ai_v2/EPII_CM55M_APP_S",
             "name": "EPII_CM55M_APP_S Launch",
             "request": "launch",
             "type": "cortex-debug",
-            "executable": "/home/steve/Seeed_Grove_Vision_AI_Module_V2/EPII_CM55M_APP_S/obj_epii_evb_icv30_bdv10/gnu_epii_evb_WLCSP65/EPII_CM55M_gnu_epii_evb_WLCSP65_s.elf",
-            "serverpath": "/home/steve/.local/bin/pyocd",
+            "executable": "/home/hig/src/edgebench/micro_client/grove_vision_ai_v2/EPII_CM55M_APP_S/obj_epii_evb_icv30_bdv10/gnu_epii_evb_WLCSP65/EPII_CM55M_gnu_epii_evb_WLCSP65_s.elf",
+            "serverpath": "/home/hig/.local/bin/pyocd",
             "servertype": "pyocd",
             "serverArgs": [
                 "-Oenable_multicore_debug=true",
@@ -38,11 +38,11 @@
                 "launches": [
                     {
                         "name": "",
-                        "folder": "/home/steve/Seeed_Grove_Vision_AI_Module_V2"
+                        "folder": "/home/hig/src/edgebench/micro_client/grove_vision_ai_v2"
                     },
                     {
                         "name": "",
-                        "folder": "/home/steve/Seeed_Grove_Vision_AI_Module_V2"
+                        "folder": "/home/hig/src/edgebench/micro_client/grove_vision_ai_v2"
                     }
                 ]
             },
@@ -58,25 +58,25 @@
                 "monitor reset halt",
                 "monitor write32 0x56100C00 0x10000000",
                 "monitor write32 0x56100C04 0x00000000",
-                "monitor load /home/steve/Seeed_Grove_Vision_AI_Module_V2/EPII_CM55M_APP_S/obj_epii_evb_icv30_bdv10/gnu_epii_evb_WLCSP65/EPII_CM55M_gnu_epii_evb_WLCSP65_s.elf",
-                "symbol-file /home/steve/Seeed_Grove_Vision_AI_Module_V2/EPII_CM55M_APP_S/obj_epii_evb_icv30_bdv10/gnu_epii_evb_WLCSP65/EPII_CM55M_gnu_epii_evb_WLCSP65_s.elf -readnow",
+                "monitor load /home/hig/src/edgebench/micro_client/grove_vision_ai_v2/EPII_CM55M_APP_S/obj_epii_evb_icv30_bdv10/gnu_epii_evb_WLCSP65/EPII_CM55M_gnu_epii_evb_WLCSP65_s.elf",
+                "symbol-file /home/hig/src/edgebench/micro_client/grove_vision_ai_v2/EPII_CM55M_APP_S/obj_epii_evb_icv30_bdv10/gnu_epii_evb_WLCSP65/EPII_CM55M_gnu_epii_evb_WLCSP65_s.elf -readnow",
                 "monitor reset halt",
                 "-enable-pretty-printing"
             ],
             "postLaunchCommands": [
                 "show can-use-hw-watchpoints"
             ],
-            "svdFile": "/home/steve/Seeed_Grove_Vision_AI_Module_V2/EPII_CM55M_APP_S/WE2_S_NS.svd",
+            "svdFile": "/home/hig/src/edgebench/micro_client/grove_vision_ai_v2/EPII_CM55M_APP_S/WE2_S_NS.svd",
             "showDevDebugOutput": "none"
         },
         {
             "preLaunchTask": "",
-            "cwd": "/home/steve/Seeed_Grove_Vision_AI_Module_V2/EPII_CM55M_APP_S",
+            "cwd": "/home/hig/src/edgebench/micro_client/grove_vision_ai_v2/EPII_CM55M_APP_S",
             "name": "EPII_CM55M_APP_S Attach",
             "request": "attach",
             "type": "cortex-debug",
-            "executable": "/home/steve/Seeed_Grove_Vision_AI_Module_V2/EPII_CM55M_APP_S/obj_epii_evb_icv30_bdv10/gnu_epii_evb_WLCSP65/EPII_CM55M_gnu_epii_evb_WLCSP65_s.elf",
-            "serverpath": "/home/steve/.local/bin/pyocd",
+            "executable": "/home/hig/src/edgebench/micro_client/grove_vision_ai_v2/EPII_CM55M_APP_S/obj_epii_evb_icv30_bdv10/gnu_epii_evb_WLCSP65/EPII_CM55M_gnu_epii_evb_WLCSP65_s.elf",
+            "serverpath": "/home/hig/.local/bin/pyocd",
             "servertype": "pyocd",
             "serverArgs": [
                 "-Oenable_multicore_debug=true",
@@ -108,12 +108,12 @@
             ],
             "overrideAttachCommands": [
                 "monitor halt",
-                "symbol-file /home/steve/Seeed_Grove_Vision_AI_Module_V2/EPII_CM55M_APP_S/obj_epii_evb_icv30_bdv10/gnu_epii_evb_WLCSP65/EPII_CM55M_gnu_epii_evb_WLCSP65_s.elf -readnow"
+                "symbol-file /home/hig/src/edgebench/micro_client/grove_vision_ai_v2/EPII_CM55M_APP_S/obj_epii_evb_icv30_bdv10/gnu_epii_evb_WLCSP65/EPII_CM55M_gnu_epii_evb_WLCSP65_s.elf -readnow"
             ],
             "postAttachCommands": [
                 "show can-use-hw-watchpoints"
             ],
-            "svdFile": "/home/steve/Seeed_Grove_Vision_AI_Module_V2/EPII_CM55M_APP_S/WE2_S_NS.svd",
+            "svdFile": "/home/hig/src/edgebench/micro_client/grove_vision_ai_v2/EPII_CM55M_APP_S/WE2_S_NS.svd",
             "showDevDebugOutput": "none"
         }
     ]

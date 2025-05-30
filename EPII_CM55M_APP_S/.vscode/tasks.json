@@ -4,14 +4,14 @@
             "options": {
                 "env": {
                     "TOOLCHAIN": "gnu",
-                    "INCLUDE": "/toolchain/arm-gnu-toolchain-13.2.Rel1-x86_64-arm-none-eabi/arm-none-eabi/include",
-                    "LIB": "/toolchain/arm-gnu-toolchain-13.2.Rel1-x86_64-arm-none-eabi//lib/gcc/arm-none-eabi/13.2.1",
-                    "PATH": "/usr/bin:/toolchain/arm-gnu-toolchain-13.2.Rel1-x86_64-arm-none-eabi/bin"
+                    "INCLUDE": "/home/hig/dev/arm-gnu-toolchain-13.2.Rel1-x86_64-arm-none-eabi/arm-none-eabi/include",
+                    "LIB": "/home/hig/dev/arm-gnu-toolchain-13.2.Rel1-x86_64-arm-none-eabi//lib/gcc/arm-none-eabi/13.2.1",
+                    "PATH": "/usr/bin:/home/hig/dev/arm-gnu-toolchain-13.2.Rel1-x86_64-arm-none-eabi/bin"
                 }
             },
             "label": "GNUArm build EPII_CM55M_APP_S",
             "type": "shell",
-            "command": "cd /home/steve/Seeed_Grove_Vision_AI_Module_V2/EPII_CM55M_APP_S && make all",
+            "command": "cd /home/hig/src/edgebench/micro_client/grove_vision_ai_v2/EPII_CM55M_APP_S && make all",
             "group": {
                 "kind": "build",
                 "isDefault": true
@@ -20,7 +20,7 @@
                 "base": "$gcc",
                 "fileLocation": [
                     "autoDetect",
-                    "/home/steve/Seeed_Grove_Vision_AI_Module_V2/EPII_CM55M_APP_S"
+                    "/home/hig/src/edgebench/micro_client/grove_vision_ai_v2/EPII_CM55M_APP_S"
                 ]
             },
             "presentation": {
@@ -33,14 +33,14 @@
             "options": {
                 "env": {
                     "TOOLCHAIN": "gnu",
-                    "INCLUDE": "/toolchain/arm-gnu-toolchain-13.2.Rel1-x86_64-arm-none-eabi/arm-none-eabi/include",
-                    "LIB": "/toolchain/arm-gnu-toolchain-13.2.Rel1-x86_64-arm-none-eabi//lib/gcc/arm-none-eabi/13.2.1",
-                    "PATH": "/usr/bin:/toolchain/arm-gnu-toolchain-13.2.Rel1-x86_64-arm-none-eabi/bin"
+                    "INCLUDE": "/home/hig/dev/arm-gnu-toolchain-13.2.Rel1-x86_64-arm-none-eabi/arm-none-eabi/include",
+                    "LIB": "/home/hig/dev/arm-gnu-toolchain-13.2.Rel1-x86_64-arm-none-eabi//lib/gcc/arm-none-eabi/13.2.1",
+                    "PATH": "/usr/bin:/home/hig/dev/arm-gnu-toolchain-13.2.Rel1-x86_64-arm-none-eabi/bin"
                 }
             },
             "label": "GNUArm clean build EPII_CM55M_APP_S",
             "type": "shell",
-            "command": "cd /home/steve/Seeed_Grove_Vision_AI_Module_V2/EPII_CM55M_APP_S && make clean && make all",
+            "command": "cd /home/hig/src/edgebench/micro_client/grove_vision_ai_v2/EPII_CM55M_APP_S && make clean && make all",
             "group": {
                 "kind": "build",
                 "isDefault": false
@@ -49,7 +49,7 @@
                 "base": "$gcc",
                 "fileLocation": [
                     "autoDetect",
-                    "/home/steve/Seeed_Grove_Vision_AI_Module_V2/EPII_CM55M_APP_S"
+                    "/home/hig/src/edgebench/micro_client/grove_vision_ai_v2/EPII_CM55M_APP_S"
                 ]
             },
             "presentation": {

@@ -1,6 +1,6 @@
 {
-    "cortex-debug.armToolchainPath": "/toolchain/arm-gnu-toolchain-13.2.Rel1-x86_64-arm-none-eabi/bin",
-    "cortex-debug.gdbPath": "/toolchain/arm-gnu-toolchain-13.2.Rel1-x86_64-arm-none-eabi/bin/arm-none-eabi-gdb",
+    "cortex-debug.armToolchainPath": "/home/hig/dev/arm-gnu-toolchain-13.2.Rel1-x86_64-arm-none-eabi/bin",
+    "cortex-debug.gdbPath": "/home/hig/dev/arm-gnu-toolchain-13.2.Rel1-x86_64-arm-none-eabi/bin/arm-none-eabi-gdb",
     "cortex-debug.variableUseNaturalFormat": true,
     "cortex-debug.registerUseNaturalFormat": true,
     "C_Cpp.errorSquiggles": "disabled",
@@ -13,8 +13,8 @@
     "C_Cpp.default.defines": [],
     "C_Cpp.default.includePath": [],
     "C_Cpp.default.browse.path": [
-        "/toolchain/arm-gnu-toolchain-13.2.Rel1-x86_64-arm-none-eabi/arm-none-eabi/include/**",
-        "/toolchain/arm-gnu-toolchain-13.2.Rel1-x86_64-arm-none-eabi//lib/gcc/arm-none-eabi/13.2.1/**",
+        "/home/hig/dev/arm-gnu-toolchain-13.2.Rel1-x86_64-arm-none-eabi/arm-none-eabi/include/**",
+        "/home/hig/dev/arm-gnu-toolchain-13.2.Rel1-x86_64-arm-none-eabi/lib/gcc/arm-none-eabi/13.2.1/**",
         "${workspaceFolder}/**"
     ],
     "C_Cpp.default.browse.limitSymbolsToIncludedHeaders": true,
@@ -53,5 +53,6 @@
         "**/*.db-shm": true,
         "**/*.bak": true
     },
-    "cortex-debug.serverTimeout": 500000
+    "cortex-debug.serverTimeout": 500000,
+    "makefile.configureOnOpen": false
 }
