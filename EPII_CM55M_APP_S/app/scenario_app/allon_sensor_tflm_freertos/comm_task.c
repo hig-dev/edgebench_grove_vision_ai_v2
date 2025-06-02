@@ -57,13 +57,15 @@
 #include "app_state.h"
 #include "comm_task.h"
 #include "allon_sensor_tflm.h"
+#include "cvapp.h"
 
 int iterations_ = 0;
-int mode_ = 0;
-char *input_buffer_ = NULL;
+uint8_t mode_ = 0;
+static const int INPUT_BYTES = 196608;
+int input_bytes_written_ = 0;
 
 #define DBG_EVT_IICS_CMD_LOG (1)
-#define DBG_EVT_IICS_CALLBACK_LOG (0)
+#define DBG_EVT_IICS_CALLBACK_LOG (1)
 
 #if DBG_EVT_IICS_CMD_LOG
 #define dbg_evt_iics_cmd(fmt, ...) xprintf(fmt, ##__VA_ARGS__)
@@ -247,7 +249,7 @@ uint8_t evt_i2ccomm_0_rx_cb(void)
     int payload_size;
     int offset;
     int chunk_size;
-    //unsigned short checksum;
+    unsigned short checksum;
 
     // ret = hx_lib_i2ccomm_validate_checksum((unsigned char *)&gRead_buf[iic_id]);
     // if (ret != I2CCOMM_NO_ERROR)
@@ -265,45 +267,110 @@ uint8_t evt_i2ccomm_0_rx_cb(void)
     {
     case I2CCOMM_FEATURE_MODE:
         xprintf("I2CCOMM_FEATURE_MODE\n");
-        mode_ = (gRead_buf[iic_id][I2CFMT_PAYLOAD_OFFSET + 0] << DATA_SFT_OFFSET_0) |
-                    (gRead_buf[iic_id][I2CFMT_PAYLOAD_OFFSET + 1] << DATA_SFT_OFFSET_8) |
-                    (gRead_buf[iic_id][I2CFMT_PAYLOAD_OFFSET + 2] << DATA_SFT_OFFSET_16) |
-                    (gRead_buf[iic_id][I2CFMT_PAYLOAD_OFFSET + 3] << DATA_SFT_OFFSET_24);
+        mode_ = gRead_buf[iic_id][I2CFMT_PAYLOAD_OFFSET + 0];
         xprintf("I2CCOMM_FEATURE_MODE mode=%d\n", mode_);
         break;
     case I2CCOMM_FEATURE_ITERATIONS:
         xprintf("I2CCOMM_FEATURE_ITERATIONS\n");
         iterations_ = (gRead_buf[iic_id][I2CFMT_PAYLOAD_OFFSET + 0] << DATA_SFT_OFFSET_0) |
-                        (gRead_buf[iic_id][I2CFMT_PAYLOAD_OFFSET + 1] << DATA_SFT_OFFSET_8) |
-                        (gRead_buf[iic_id][I2CFMT_PAYLOAD_OFFSET + 2] << DATA_SFT_OFFSET_16) |
-                        (gRead_buf[iic_id][I2CFMT_PAYLOAD_OFFSET + 3] << DATA_SFT_OFFSET_24);
+                      (gRead_buf[iic_id][I2CFMT_PAYLOAD_OFFSET + 1] << DATA_SFT_OFFSET_8) |
+                      (gRead_buf[iic_id][I2CFMT_PAYLOAD_OFFSET + 2] << DATA_SFT_OFFSET_16) |
+                      (gRead_buf[iic_id][I2CFMT_PAYLOAD_OFFSET + 3] << DATA_SFT_OFFSET_24);
         xprintf("I2CCOMM_FEATURE_ITERATIONS iterations=%d\n", iterations_);
         break;
     case I2CCOMM_FEATURE_INPUT:
         xprintf("I2CCOMM_FEATURE_INPUT\n");
-        if (input_buffer_ == NULL)
+        if (input_tensor_ == NULL)
         {
-            xprintf("I2CCOMM_FEATURE_INPUT input_buffer_ is NULL\n");
+            xprintf("I2CCOMM_FEATURE_INPUT input_tensor_ is NULL\n");
             ret = -1;
             break;
         }
         payload_size = (gRead_buf[iic_id][I2CFMT_PAYLOADLEN_LSB_OFFSET] << DATA_SFT_OFFSET_0) |
-                            (gRead_buf[iic_id][I2CFMT_PAYLOADLEN_MSB_OFFSET] << DATA_SFT_OFFSET_8);
+                       (gRead_buf[iic_id][I2CFMT_PAYLOADLEN_MSB_OFFSET] << DATA_SFT_OFFSET_8);
         offset = (gRead_buf[iic_id][I2CFMT_PAYLOAD_OFFSET + 0] << DATA_SFT_OFFSET_0) |
-                    (gRead_buf[iic_id][I2CFMT_PAYLOAD_OFFSET + 1] << DATA_SFT_OFFSET_8) |
-                    (gRead_buf[iic_id][I2CFMT_PAYLOAD_OFFSET + 2] << DATA_SFT_OFFSET_16) |
-                    (gRead_buf[iic_id][I2CFMT_PAYLOAD_OFFSET + 3] << DATA_SFT_OFFSET_24);
+                 (gRead_buf[iic_id][I2CFMT_PAYLOAD_OFFSET + 1] << DATA_SFT_OFFSET_8) |
+                 (gRead_buf[iic_id][I2CFMT_PAYLOAD_OFFSET + 2] << DATA_SFT_OFFSET_16) |
+                 (gRead_buf[iic_id][I2CFMT_PAYLOAD_OFFSET + 3] << DATA_SFT_OFFSET_24);
         xprintf("I2CCOMM_FEATURE_INPUT payload_size=%d, offset=%d\n", payload_size, offset);
         chunk_size = payload_size - 4; // 4 bytes for offset
-        memcpy(input_buffer_ + offset, &gRead_buf[iic_id][I2CFMT_PAYLOAD_OFFSET + 4], chunk_size);
+        if (offset != input_bytes_written_)
+        {
+            xprintf("I2CCOMM_FEATURE_INPUT offset mismatch: expected %d, got %d\n", input_bytes_written_, offset);
+            ret = -1;
+            break;
+        }
+        memcpy(input_tensor_ + offset, &gRead_buf[iic_id][I2CFMT_PAYLOAD_OFFSET + 4], chunk_size);
+        input_bytes_written_ += chunk_size;
         break;
     case I2CCOMM_FEATURE_CMD:
         xprintf("I2CCOMM_FEATURE_CMD\n");
-        int cmd = (gRead_buf[iic_id][I2CFMT_PAYLOAD_OFFSET + 0] << DATA_SFT_OFFSET_0) |
-                    (gRead_buf[iic_id][I2CFMT_PAYLOAD_OFFSET + 1] << DATA_SFT_OFFSET_8) |
-                    (gRead_buf[iic_id][I2CFMT_PAYLOAD_OFFSET + 2] << DATA_SFT_OFFSET_16) |
-                    (gRead_buf[iic_id][I2CFMT_PAYLOAD_OFFSET + 3] << DATA_SFT_OFFSET_24);
+        uint8_t cmd = gRead_buf[iic_id][I2CFMT_PAYLOAD_OFFSET + 0];
         xprintf("I2CCOMM_FEATURE_CMD cmd=0x%02x\n", cmd);
+        if (cmd == I2CCOMM_START_COMMAND)
+        {
+            if (mode_ == I2CCOMM_LATENCY_TEST_MODE && iterations_ > 0)
+            {
+                if (input_bytes_written_ != INPUT_BYTES)
+                {
+                    xprintf("I2CCOMM_FEATURE_CMD input_bytes_written_ mismatch: expected %d, got %d\n", INPUT_BYTES, input_bytes_written_);
+                    ret = -1;
+                    break;
+                }
+                // Latency test
+                int ms = cv_inference_test(iterations_);
+                const int msPayloadLength = 4;
+                // prepare write buffer for write process
+                gWrite_buf[iic_id][I2CFMT_FEATURE_OFFSET] = I2CCOMM_FEATURE_RESULT;
+                gWrite_buf[iic_id][I2CFMT_COMMAND_OFFSET] = 0x00;
+                gWrite_buf[iic_id][I2CFMT_PAYLOADLEN_MSB_OFFSET] = (msPayloadLength >> 8) & 0xFF;
+                gWrite_buf[iic_id][I2CFMT_PAYLOADLEN_LSB_OFFSET] = msPayloadLength & 0xFF;
+
+                gWrite_buf[iic_id][I2CFMT_PAYLOAD_OFFSET] = (ms >> DATA_SFT_OFFSET_0) & 0xFF;
+                gWrite_buf[iic_id][I2CFMT_PAYLOAD_OFFSET + 1] = (ms >> DATA_SFT_OFFSET_8) & 0xFF;
+                gWrite_buf[iic_id][I2CFMT_PAYLOAD_OFFSET + 2] = (ms >> DATA_SFT_OFFSET_16) & 0xFF;
+                gWrite_buf[iic_id][I2CFMT_PAYLOAD_OFFSET + 3] = (ms >> DATA_SFT_OFFSET_24) & 0xFF;
+                // Checksum
+                I2CCOMM_ERROR_E retval = hx_lib_i2ccomm_generate_checksum((unsigned char *)&gWrite_buf[iic_id], I2CCOMM_HEADER_SIZE + msPayloadLength, &checksum);
+                if (retval == I2CCOMM_NO_ERROR)
+                {
+                    dbg_evt_iics_cmd("checksum generation : 0x%04x \n", checksum);
+                    gWrite_buf[iic_id][I2CCOMM_HEADER_SIZE + msPayloadLength] = checksum & 0xFF;
+                    gWrite_buf[iic_id][I2CCOMM_HEADER_SIZE + msPayloadLength + 1] = (checksum >> DATA_SFT_OFFSET_8) & 0xFF;
+                }
+                else
+                {
+                    dbg_evt_iics_cmd("[Warning] i2c cmd - checksum generation : FAIL\n");
+                    gWrite_buf[iic_id][I2CCOMM_HEADER_SIZE + msPayloadLength] = 0xFF;
+                    gWrite_buf[iic_id][I2CCOMM_HEADER_SIZE + msPayloadLength + 1] = 0xFF;
+                }
+
+                // hx_CleanDCache_by_Addr((void *)&gWrite_buf[iic_id], I2CCOMM_MAX_RBUF_SIZE);
+                hx_lib_i2ccomm_enable_write(iic_id, (unsigned char *)&gWrite_buf[iic_id]);
+            }
+            else if (mode_ == I2CCOMM_ACCURACY_TEST_MODE)
+            {
+                if (input_bytes_written_ != INPUT_BYTES)
+                {
+                    xprintf("I2CCOMM_FEATURE_CMD input_bytes_written_ mismatch: expected %d, got %d\n", INPUT_BYTES, input_bytes_written_);
+                    ret = -1;
+                    break;
+                }
+                // TODO: Accuracy test
+                xprintf("I2CCOMM_FEATURE_CMD cmd=0x%02x mode=%d iterations=%d not supported\n", cmd, mode_, iterations_);
+            }
+            else
+            {
+                xprintf("I2CCOMM_FEATURE_CMD cmd=0x%02x mode=%d iterations=%d not supported\n", cmd, mode_, iterations_);
+                ret = -1;
+            }
+        }
+        else
+        {
+            xprintf("I2CCOMM_FEATURE_CMD cmd=0x%02x not supported\n", cmd);
+            ret = -1;
+        }
+
         break;
     default:
         xprintf("I2CCOMM_FEATURE_UNKNOWN: 0x%02x\n", feature);
@@ -311,7 +378,14 @@ uint8_t evt_i2ccomm_0_rx_cb(void)
     }
 
     prv_evt_i2ccomm_clear_read_buf_header(iic_id);
-    hx_lib_i2ccomm_enable_read(iic_id, (unsigned char *)&gRead_buf[iic_id], I2CCOMM_MAX_RBUF_SIZE);
+    if (ret != -1)
+    {
+        hx_lib_i2ccomm_enable_read(iic_id, (unsigned char *)&gRead_buf[iic_id], I2CCOMM_MAX_RBUF_SIZE);
+    }
+    else
+    {
+        xprintf("Error processing I2C command. Disabling read!\n");
+    }
     return ret;
 }
 

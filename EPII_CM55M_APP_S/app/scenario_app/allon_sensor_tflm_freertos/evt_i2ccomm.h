@@ -22,11 +22,9 @@
  * Constant Definition                              *
  ***************************************************/
 
-/* I2CCOMM_FEATURE_SYS : Payload Length Definition of RX buffer
- * I2CCOMM_SYS_CMD_E Command Payload Size for i2c master read
- */
-#define I2CCOMM_SYS_CMD_PAYLOAD_VER_BSP     4 // I2CCOMM_CMD_SYS_GET_VER_BSP
-#define I2CCOMM_SYS_CMD_PAYLOAD_VER_I2C     4 // I2CCOMM_CMD_SYS_GET_VER_I2C
+#define I2CCOMM_START_COMMAND          (0x01) /**< Start Command */
+#define I2CCOMM_LATENCY_TEST_MODE      (0x01) /**< Latency Test Mode */
+#define I2CCOMM_ACCURACY_TEST_MODE     (0x02) /**< Accuracy Test Mode */
 
 /****************************************************
  * ENUM Declaration                                 *

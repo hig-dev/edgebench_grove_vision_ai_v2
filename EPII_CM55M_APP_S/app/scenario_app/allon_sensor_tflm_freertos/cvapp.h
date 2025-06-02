@@ -14,9 +14,14 @@
 extern "C" {
 #endif
 
+extern int8_t* input_tensor_;
+extern int8_t* output_tensor_;
+extern size_t model_input_size_;
+
 int cv_init(bool security_enable, bool privilege_enable);
 
-int cv_run();
+int cv_inference_test(int iterations);
+bool cv_accuracy_test();
 
 int cv_deinit();
 #ifdef __cplusplus
