@@ -1,19 +1,19 @@
 /*
  * comm_task.h
  *
- *  Created on: 2022¦~2¤ë22¤é
+ *  Created on: 2022ï¿½~2ï¿½ï¿½22ï¿½ï¿½
  *      Author: 902447
  */
 
 #ifndef APP_SCENARIO_APP_FREERTOS_TZ_S_DP_SAMPLE_COMM_TASK_H_
 #define APP_SCENARIO_APP_FREERTOS_TZ_S_DP_SAMPLE_COMM_TASK_H_
 
-
-
-void aon_gpio0_interupt_reg();
-void aon_gpio1_interupt_reg();
+#define INPUT_BUFFER_SIZE  1
 
 void comm_task(void *pvParameters);
 
+extern int iterations_;
+extern int mode_;
+extern char *input_buffer_;
 
 #endif /* APP_SCENARIO_APP_FREERTOS_TZ_S_DP_SAMPLE_COMM_TASK_H_ */

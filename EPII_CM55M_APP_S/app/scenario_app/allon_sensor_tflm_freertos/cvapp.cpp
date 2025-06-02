@@ -27,7 +27,6 @@
 
 #include "xprintf.h"
 
-#include "person_detect_model_data_vela.h"
 #include "common_config.h"
 
 #define LOCAL_FRAQ_BITS (8)
@@ -46,7 +45,7 @@
 #endif
 #endif
 
-#define TENSOR_ARENA_BUFSIZE  (125*1024)
+#define TENSOR_ARENA_BUFSIZE  (1575*1024)
 __attribute__(( section(".bss.NoInit"))) uint8_t tensor_arena_buf[TENSOR_ARENA_BUFSIZE] __ALIGNED(32);
 
 using namespace std;
@@ -116,11 +115,8 @@ int cv_init(bool security_enable, bool privilege_enable)
 	if(_arm_npu_init(security_enable, privilege_enable)!=0)
 		return -1;
 
-#if (FLASH_XIP_MODEL == 1)
-	static const tflite::Model*model = tflite::GetModel((const void *)0x3A180000);
-#else
-	static const tflite::Model*model = tflite::GetModel((const void *)g_person_detect_model_data_vela);
-#endif
+	static const tflite::Model*model = tflite::GetModel((const void *)MODEL_FLASH_ADDR);
+
 
 	if (model->version() != TFLITE_SCHEMA_VERSION) {
 		xprintf(
