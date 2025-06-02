@@ -23,7 +23,6 @@
 #include "tensorflow/lite/micro/micro_interpreter.h"
 #include "tensorflow/lite/schema/schema_generated.h"
 #include "tensorflow/lite/c/common.h"
-#include "tensorflow/lite/micro/micro_error_reporter.h"
 
 #include "xprintf.h"
 #include "FreeRTOS.h"
@@ -89,7 +88,7 @@ static int _arm_npu_init(bool security_enable, bool privilege_enable)
 	_arm_npu_irq_init();
 
 	/* Initialise Ethos-U55 device */
-	const void *ethosu_base_address = (void *)(U55_BASE);
+	void * const ethosu_base_address = (void *)(U55_BASE);
 
 	if (0 != (err = ethosu_init(
 				  &ethosu_drv,		   /* Ethos-U driver device pointer */
@@ -130,8 +129,18 @@ int cv_init(bool security_enable, bool privilege_enable)
 		xprintf("model's schema version %d\n", model->version());
 	}
 
-	static tflite::MicroErrorReporter micro_error_reporter;
+	#if IS_EFFICIENTVIT
+	static tflite::MicroMutableOpResolver<8> op_resolver;
+	op_resolver.AddQuantize();
+	op_resolver.AddDequantize();
+	op_resolver.AddPadV2();
+	op_resolver.AddBatchMatMul();
+	op_resolver.AddTranspose();
+	op_resolver.AddRelu();
+	op_resolver.AddDiv();
+	#else
 	static tflite::MicroMutableOpResolver<1> op_resolver;
+	#endif
 
 	if (kTfLiteOk != op_resolver.AddEthosU())
 	{
@@ -139,7 +148,7 @@ int cv_init(bool security_enable, bool privilege_enable)
 		return false;
 	}
 
-	static tflite::MicroInterpreter static_interpreter(model, op_resolver, (uint8_t *)tensor_arena, tensor_arena_size, &micro_error_reporter);
+	static tflite::MicroInterpreter static_interpreter(model, op_resolver, (uint8_t *)tensor_arena, tensor_arena_size);
 
 	if (static_interpreter.AllocateTensors() != kTfLiteOk)
 	{
@@ -157,7 +166,7 @@ int cv_init(bool security_enable, bool privilege_enable)
 
 int cv_inference_test(int iterations)
 {
-	auto t0 = xTaskGetTickCount() * portTICK_PERIOD_MS;
+	TickType_t t0 = xTaskGetTickCount();
 	for (int i = 0; i < iterations; ++i)
 	{
 		auto result = int_ptr->Invoke();
@@ -166,10 +175,11 @@ int cv_inference_test(int iterations)
 			return -1;
 		}
 	}
-	auto t1 = xTaskGetTickCount() * portTICK_PERIOD_MS;
-	int ms = t1 - t0;
+	TickType_t t1 = xTaskGetTickCount();
+	uint32_t elapsedTicks = (uint32_t)(t1 - t0);
+	uint32_t ms = elapsedTicks * portTICK_PERIOD_MS;
 	xprintf("cv_inference_test: %d iterations took %d ms\n", iterations, ms);
-	return ms;
+	return (int) ms;
 }
 
 bool cv_accuracy_test()
