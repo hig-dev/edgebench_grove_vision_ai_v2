@@ -39,3 +39,6 @@ we2_image_gen_local/Images*.txt
 *.img
 
 .vscode/
+we2_image_gen_local/secureboot_tool/cert/ICVSBContent_Cert.txt
+we2_image_gen_local/secureboot_tool/cert/ICVSBContent.crt
+we2_image_gen_local/secureboot_tool/sb_content_cert.log

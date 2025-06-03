@@ -425,7 +425,7 @@ uint8_t evt_i2ccomm_0_rx_cb(void)
         break;
     case I2CCOMM_FEATURE_ACCURACY_RESULT:
         // xprintf("I2CCOMM_FEATURE_ACCURACY_RESULT\n");
-        const int max_chunk_size = 128;
+        const int max_chunk_size = 192;
         if (model_output_size_ <= 0)
         {
             xprintf("I2CCOMM_FEATURE_ACCURACY_RESULT model_output_size_ is 0\n");
