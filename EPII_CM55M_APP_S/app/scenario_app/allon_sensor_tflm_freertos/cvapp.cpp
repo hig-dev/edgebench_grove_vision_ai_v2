@@ -131,6 +131,7 @@ int cv_init(bool security_enable, bool privilege_enable)
 	}
 
 	#if IS_EFFICIENTVIT
+	xprintf("EfficientVit model\n");
 	static tflite::MicroMutableOpResolver<8> op_resolver;
 	op_resolver.AddQuantize();
 	op_resolver.AddDequantize();
@@ -140,6 +141,7 @@ int cv_init(bool security_enable, bool privilege_enable)
 	op_resolver.AddRelu();
 	op_resolver.AddDiv();
 	#else
+	xprintf("MobileOne model\n");
 	static tflite::MicroMutableOpResolver<1> op_resolver;
 	#endif
 
@@ -181,6 +183,7 @@ int cv_inference_test(int iterations)
 	uint32_t elapsedTicks = (uint32_t)(t1 - t0);
 	uint32_t ms = elapsedTicks * portTICK_PERIOD_MS;
 	xprintf("cv_inference_test: %d iterations took %d ms\n", iterations, ms);
+	output_tensor_ = int_ptr->typed_output_tensor<int8_t>(0);
 	return ms;
 }
 
