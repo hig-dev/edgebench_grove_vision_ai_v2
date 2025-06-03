@@ -273,10 +273,12 @@ uint8_t evt_i2ccomm_0_rx_cb(void)
         break;
     case I2CCOMM_FEATURE_ITERATIONS:
         xprintf("I2CCOMM_FEATURE_ITERATIONS\n");
-        iterations_ = (gRead_buf[iic_id][I2CFMT_PAYLOAD_OFFSET + 0] << DATA_SFT_OFFSET_0) |
-                      (gRead_buf[iic_id][I2CFMT_PAYLOAD_OFFSET + 1] << DATA_SFT_OFFSET_8) |
-                      (gRead_buf[iic_id][I2CFMT_PAYLOAD_OFFSET + 2] << DATA_SFT_OFFSET_16) |
-                      (gRead_buf[iic_id][I2CFMT_PAYLOAD_OFFSET + 3] << DATA_SFT_OFFSET_24);
+         // Assume big-endian 4-byte integer
+        iterations_ =
+            ((int)(gRead_buf[iic_id][I2CFMT_PAYLOAD_OFFSET + 0]) << 24) |
+            ((int)(gRead_buf[iic_id][I2CFMT_PAYLOAD_OFFSET + 1]) << 16) |
+            ((int)(gRead_buf[iic_id][I2CFMT_PAYLOAD_OFFSET + 2]) << 8) |
+            (int)(gRead_buf[iic_id][I2CFMT_PAYLOAD_OFFSET + 3]);
         xprintf("I2CCOMM_FEATURE_ITERATIONS iterations=%d\n", iterations_);
         break;
     case I2CCOMM_FEATURE_INPUT:
@@ -287,12 +289,14 @@ uint8_t evt_i2ccomm_0_rx_cb(void)
             ret = -1;
             break;
         }
-        payload_size = (gRead_buf[iic_id][I2CFMT_PAYLOADLEN_LSB_OFFSET] << DATA_SFT_OFFSET_0) |
-                       (gRead_buf[iic_id][I2CFMT_PAYLOADLEN_MSB_OFFSET] << DATA_SFT_OFFSET_8);
-        offset = (gRead_buf[iic_id][I2CFMT_PAYLOAD_OFFSET + 0] << DATA_SFT_OFFSET_0) |
-                 (gRead_buf[iic_id][I2CFMT_PAYLOAD_OFFSET + 1] << DATA_SFT_OFFSET_8) |
-                 (gRead_buf[iic_id][I2CFMT_PAYLOAD_OFFSET + 2] << DATA_SFT_OFFSET_16) |
-                 (gRead_buf[iic_id][I2CFMT_PAYLOAD_OFFSET + 3] << DATA_SFT_OFFSET_24);
+        payload_size = (gRead_buf[iic_id][I2CFMT_PAYLOADLEN_MSB_OFFSET] << DATA_SFT_OFFSET_0) |
+                       (gRead_buf[iic_id][I2CFMT_PAYLOADLEN_LSB_OFFSET] << DATA_SFT_OFFSET_8);
+        // Assume big-endian 4-byte integer
+        offset = 
+            ((int)(gRead_buf[iic_id][I2CFMT_PAYLOAD_OFFSET + 0]) << 24) |
+            ((int)(gRead_buf[iic_id][I2CFMT_PAYLOAD_OFFSET + 1]) << 16) |
+            ((int)(gRead_buf[iic_id][I2CFMT_PAYLOAD_OFFSET + 2]) << 8) |
+            (int)(gRead_buf[iic_id][I2CFMT_PAYLOAD_OFFSET + 3]);
         xprintf("I2CCOMM_FEATURE_INPUT payload_size=%d, offset=%d\n", payload_size, offset);
         chunk_size = payload_size - 4; // 4 bytes for offset
         if (offset != input_bytes_written_)
@@ -370,15 +374,15 @@ uint8_t evt_i2ccomm_0_rx_cb(void)
         }
         const int msPayloadLength = 4;
         // prepare write buffer for write process
-        gWrite_buf[iic_id][I2CFMT_FEATURE_OFFSET] = I2CCOMM_FEATURE_LATENCY_RESULT;
-        gWrite_buf[iic_id][I2CFMT_COMMAND_OFFSET] = 0x0;
-        gWrite_buf[iic_id][I2CFMT_PAYLOADLEN_MSB_OFFSET] = (msPayloadLength >> 8) & 0xFF;
-        gWrite_buf[iic_id][I2CFMT_PAYLOADLEN_LSB_OFFSET] = msPayloadLength & 0xFF;
+        gWrite_buf[iic_id][I2CFMT_FEATURE_OFFSET] = 6;
+        gWrite_buf[iic_id][I2CFMT_COMMAND_OFFSET] = 7;
+        gWrite_buf[iic_id][I2CFMT_PAYLOADLEN_LSB_OFFSET] = msPayloadLength >> 8;
+        gWrite_buf[iic_id][I2CFMT_PAYLOADLEN_MSB_OFFSET] = msPayloadLength & 0xFF;
 
-        gWrite_buf[iic_id][I2CFMT_PAYLOAD_OFFSET] = (latency_result_ms_ >> DATA_SFT_OFFSET_0) & 0xFF;
-        gWrite_buf[iic_id][I2CFMT_PAYLOAD_OFFSET + 1] = (latency_result_ms_ >> DATA_SFT_OFFSET_8) & 0xFF;
-        gWrite_buf[iic_id][I2CFMT_PAYLOAD_OFFSET + 2] = (latency_result_ms_ >> DATA_SFT_OFFSET_16) & 0xFF;
-        gWrite_buf[iic_id][I2CFMT_PAYLOAD_OFFSET + 3] = (latency_result_ms_ >> DATA_SFT_OFFSET_24) & 0xFF;
+        gWrite_buf[iic_id][I2CFMT_PAYLOAD_OFFSET] = (uint8_t)(latency_result_ms_ >> 24);
+        gWrite_buf[iic_id][I2CFMT_PAYLOAD_OFFSET + 1] = (uint8_t)(latency_result_ms_ >> 16);
+        gWrite_buf[iic_id][I2CFMT_PAYLOAD_OFFSET + 2] = (uint8_t)(latency_result_ms_ >> 8);
+        gWrite_buf[iic_id][I2CFMT_PAYLOAD_OFFSET + 3] = (uint8_t)(latency_result_ms_);
         // Checksum
         auto retval = hx_lib_i2ccomm_generate_checksum((unsigned char *) &gWrite_buf[iic_id], I2CCOMM_HEADER_SIZE + msPayloadLength, &checksum);
 
@@ -412,18 +416,19 @@ uint8_t evt_i2ccomm_0_rx_cb(void)
             ret = -1;
             break;
         }
-        int offset = (gRead_buf[iic_id][I2CFMT_PAYLOAD_OFFSET + 0] << DATA_SFT_OFFSET_0) |
-                      (gRead_buf[iic_id][I2CFMT_PAYLOAD_OFFSET + 1] << DATA_SFT_OFFSET_8) |
-                      (gRead_buf[iic_id][I2CFMT_PAYLOAD_OFFSET + 2] << DATA_SFT_OFFSET_16) |
-                      (gRead_buf[iic_id][I2CFMT_PAYLOAD_OFFSET + 3] << DATA_SFT_OFFSET_24);
+        int offset = 
+            ((int)(gRead_buf[iic_id][I2CFMT_PAYLOAD_OFFSET + 0]) << 24) |
+            ((int)(gRead_buf[iic_id][I2CFMT_PAYLOAD_OFFSET + 1]) << 16) |
+            ((int)(gRead_buf[iic_id][I2CFMT_PAYLOAD_OFFSET + 2]) << 8) |
+            (int)(gRead_buf[iic_id][I2CFMT_PAYLOAD_OFFSET + 3]);
 
         int chunk_size = model_output_size_ - offset < I2CCOMM_MAX_PAYLOAD_SIZE ? model_output_size_ - offset : I2CCOMM_MAX_PAYLOAD_SIZE;
         
         // prepare write buffer for write process
         gWrite_buf[iic_id][I2CFMT_FEATURE_OFFSET] = I2CCOMM_FEATURE_ACCURACY_RESULT;
         gWrite_buf[iic_id][I2CFMT_COMMAND_OFFSET] = 0x0;
-        gWrite_buf[iic_id][I2CFMT_PAYLOADLEN_MSB_OFFSET] = (chunk_size >> 8) & 0xFF;
-        gWrite_buf[iic_id][I2CFMT_PAYLOADLEN_LSB_OFFSET] = chunk_size & 0xFF;
+        gWrite_buf[iic_id][I2CFMT_PAYLOADLEN_LSB_OFFSET] = chunk_size >> 8;
+        gWrite_buf[iic_id][I2CFMT_PAYLOADLEN_MSB_OFFSET] = chunk_size & 0xFF;
 
         memcpy(&gWrite_buf[iic_id][I2CFMT_PAYLOAD_OFFSET], output_tensor_ + offset, chunk_size);
 
