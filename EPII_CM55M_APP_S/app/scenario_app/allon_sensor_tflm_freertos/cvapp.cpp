@@ -33,6 +33,7 @@
 int8_t *input_tensor_ = nullptr;
 int8_t *output_tensor_ = nullptr;
 size_t model_input_size_ = 0;
+size_t model_output_size_ = 0;
 
 #ifdef TRUSTZONE_SEC
 #define U55_BASE BASE_ADDR_APB_U55_CTRL_ALIAS
@@ -158,6 +159,7 @@ int cv_init(bool security_enable, bool privilege_enable)
 	input_tensor_ = static_interpreter.typed_input_tensor<int8_t>(0);
 	output_tensor_ = static_interpreter.typed_output_tensor<int8_t>(0);
 	model_input_size_ = static_interpreter.input_tensor(0)->bytes;
+	model_output_size_ = static_interpreter.output_tensor(0)->bytes;
 
 	xprintf("initial done\n");
 
@@ -179,7 +181,7 @@ int cv_inference_test(int iterations)
 	uint32_t elapsedTicks = (uint32_t)(t1 - t0);
 	uint32_t ms = elapsedTicks * portTICK_PERIOD_MS;
 	xprintf("cv_inference_test: %d iterations took %d ms\n", iterations, ms);
-	return (int) ms;
+	return ms;
 }
 
 bool cv_accuracy_test()

@@ -17,6 +17,7 @@ extern "C" {
 extern int8_t* input_tensor_;
 extern int8_t* output_tensor_;
 extern size_t model_input_size_;
+extern size_t model_output_size_;
 
 int cv_init(bool security_enable, bool privilege_enable);
 

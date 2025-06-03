@@ -63,6 +63,7 @@ int iterations_ = 0;
 uint8_t mode_ = 0;
 static const int INPUT_BYTES = 196608;
 int input_bytes_written_ = 0;
+int latency_result_ms_ = 0;
 
 #define DBG_EVT_IICS_CMD_LOG (1)
 #define DBG_EVT_IICS_CALLBACK_LOG (1)
@@ -318,35 +319,7 @@ uint8_t evt_i2ccomm_0_rx_cb(void)
                     break;
                 }
                 // Latency test
-                int ms = cv_inference_test(iterations_);
-                const int msPayloadLength = 4;
-                // prepare write buffer for write process
-                gWrite_buf[iic_id][I2CFMT_FEATURE_OFFSET] = I2CCOMM_FEATURE_RESULT;
-                gWrite_buf[iic_id][I2CFMT_COMMAND_OFFSET] = 0x00;
-                gWrite_buf[iic_id][I2CFMT_PAYLOADLEN_MSB_OFFSET] = (msPayloadLength >> 8) & 0xFF;
-                gWrite_buf[iic_id][I2CFMT_PAYLOADLEN_LSB_OFFSET] = msPayloadLength & 0xFF;
-
-                gWrite_buf[iic_id][I2CFMT_PAYLOAD_OFFSET] = (ms >> DATA_SFT_OFFSET_0) & 0xFF;
-                gWrite_buf[iic_id][I2CFMT_PAYLOAD_OFFSET + 1] = (ms >> DATA_SFT_OFFSET_8) & 0xFF;
-                gWrite_buf[iic_id][I2CFMT_PAYLOAD_OFFSET + 2] = (ms >> DATA_SFT_OFFSET_16) & 0xFF;
-                gWrite_buf[iic_id][I2CFMT_PAYLOAD_OFFSET + 3] = (ms >> DATA_SFT_OFFSET_24) & 0xFF;
-                // Checksum
-                I2CCOMM_ERROR_E retval = hx_lib_i2ccomm_generate_checksum((unsigned char *)&gWrite_buf[iic_id], I2CCOMM_HEADER_SIZE + msPayloadLength, &checksum);
-                if (retval == I2CCOMM_NO_ERROR)
-                {
-                    dbg_evt_iics_cmd("checksum generation : 0x%04x \n", checksum);
-                    gWrite_buf[iic_id][I2CCOMM_HEADER_SIZE + msPayloadLength] = checksum & 0xFF;
-                    gWrite_buf[iic_id][I2CCOMM_HEADER_SIZE + msPayloadLength + 1] = (checksum >> DATA_SFT_OFFSET_8) & 0xFF;
-                }
-                else
-                {
-                    dbg_evt_iics_cmd("[Warning] i2c cmd - checksum generation : FAIL\n");
-                    gWrite_buf[iic_id][I2CCOMM_HEADER_SIZE + msPayloadLength] = 0xFF;
-                    gWrite_buf[iic_id][I2CCOMM_HEADER_SIZE + msPayloadLength + 1] = 0xFF;
-                }
-
-                // hx_CleanDCache_by_Addr((void *)&gWrite_buf[iic_id], I2CCOMM_MAX_RBUF_SIZE);
-                hx_lib_i2ccomm_enable_write(iic_id, (unsigned char *)&gWrite_buf[iic_id]);
+                latency_result_ms_ = cv_inference_test(iterations_);
             }
             else if (mode_ == I2CCOMM_ACCURACY_TEST_MODE)
             {
@@ -356,8 +329,23 @@ uint8_t evt_i2ccomm_0_rx_cb(void)
                     ret = -1;
                     break;
                 }
-                // TODO: Accuracy test
-                xprintf("I2CCOMM_FEATURE_CMD cmd=0x%02x mode=%d iterations=%d not supported\n", cmd, mode_, iterations_);
+                if (output_tensor_ == NULL)
+                {
+                    xprintf("I2CCOMM_FEATURE_CMD model_output_size_ is 0 or output_tensor_ is NULL\n");
+                    ret = -1;
+                    break;
+                }
+                // Accuracy test
+                if (cv_accuracy_test())
+                {
+                    input_bytes_written_ = 0; // Reset for next input
+                    xprintf("I2CCOMM_FEATURE_CMD cv_accuracy_test passed\n");
+                }
+                else
+                {
+                    xprintf("I2CCOMM_FEATURE_CMD cv_accuracy_test failed\n");
+                    ret = -1;
+                }
             }
             else
             {
@@ -371,6 +359,94 @@ uint8_t evt_i2ccomm_0_rx_cb(void)
             ret = -1;
         }
 
+        break;
+    case I2CCOMM_FEATURE_LATENCY_RESULT:
+        xprintf("I2CCOMM_FEATURE_LATENCY_RESULT\n");
+        if (latency_result_ms_ <= 0)
+        {
+            xprintf("I2CCOMM_FEATURE_LATENCY_RESULT latency_result_ms_ is invalid: %d\n", latency_result_ms_);
+            ret = -1;
+            break;
+        }
+        const int msPayloadLength = 4;
+        // prepare write buffer for write process
+        gWrite_buf[iic_id][I2CFMT_FEATURE_OFFSET] = I2CCOMM_FEATURE_LATENCY_RESULT;
+        gWrite_buf[iic_id][I2CFMT_COMMAND_OFFSET] = 0x0;
+        gWrite_buf[iic_id][I2CFMT_PAYLOADLEN_MSB_OFFSET] = (msPayloadLength >> 8) & 0xFF;
+        gWrite_buf[iic_id][I2CFMT_PAYLOADLEN_LSB_OFFSET] = msPayloadLength & 0xFF;
+
+        gWrite_buf[iic_id][I2CFMT_PAYLOAD_OFFSET] = (latency_result_ms_ >> DATA_SFT_OFFSET_0) & 0xFF;
+        gWrite_buf[iic_id][I2CFMT_PAYLOAD_OFFSET + 1] = (latency_result_ms_ >> DATA_SFT_OFFSET_8) & 0xFF;
+        gWrite_buf[iic_id][I2CFMT_PAYLOAD_OFFSET + 2] = (latency_result_ms_ >> DATA_SFT_OFFSET_16) & 0xFF;
+        gWrite_buf[iic_id][I2CFMT_PAYLOAD_OFFSET + 3] = (latency_result_ms_ >> DATA_SFT_OFFSET_24) & 0xFF;
+        // Checksum
+        auto retval = hx_lib_i2ccomm_generate_checksum((unsigned char *) &gWrite_buf[iic_id], I2CCOMM_HEADER_SIZE + msPayloadLength, &checksum);
+
+        if (retval == I2CCOMM_NO_ERROR)
+        {
+            dbg_evt_iics_cmd("checksum generation : 0x%04x \n", checksum);
+            gWrite_buf[iic_id][I2CCOMM_HEADER_SIZE + msPayloadLength] = checksum & 0xFF;
+            gWrite_buf[iic_id][I2CCOMM_HEADER_SIZE + msPayloadLength + 1] = (checksum >> DATA_SFT_OFFSET_8) & 0xFF;
+        }
+        else
+        {
+            dbg_evt_iics_cmd("[Warning] i2c cmd - checksum generation : FAIL\n");
+            gWrite_buf[iic_id][I2CCOMM_HEADER_SIZE + msPayloadLength] = 0xFF;
+            gWrite_buf[iic_id][I2CCOMM_HEADER_SIZE + msPayloadLength + 1] = 0xFF;
+        }
+
+        hx_CleanDCache_by_Addr((void *)&gWrite_buf[iic_id], I2CCOMM_MAX_RBUF_SIZE);
+        hx_lib_i2ccomm_enable_write(iic_id, (unsigned char *)&gWrite_buf[iic_id]);
+        break;
+    case I2CCOMM_FEATURE_ACCURACY_RESULT:
+        xprintf("I2CCOMM_FEATURE_ACCURACY_RESULT\n");
+        if (model_output_size_ <= 0 )
+        {
+            xprintf("I2CCOMM_FEATURE_ACCURACY_RESULT model_output_size_ is 0\n");
+            ret = -1;
+            break;
+        }
+        if (output_tensor_ == NULL)
+        {
+            xprintf("I2CCOMM_FEATURE_ACCURACY_RESULT output_tensor_ is NULL\n");
+            ret = -1;
+            break;
+        }
+        int offset = (gRead_buf[iic_id][I2CFMT_PAYLOAD_OFFSET + 0] << DATA_SFT_OFFSET_0) |
+                      (gRead_buf[iic_id][I2CFMT_PAYLOAD_OFFSET + 1] << DATA_SFT_OFFSET_8) |
+                      (gRead_buf[iic_id][I2CFMT_PAYLOAD_OFFSET + 2] << DATA_SFT_OFFSET_16) |
+                      (gRead_buf[iic_id][I2CFMT_PAYLOAD_OFFSET + 3] << DATA_SFT_OFFSET_24);
+
+        int chunk_size = model_output_size_ - offset < I2CCOMM_MAX_PAYLOAD_SIZE ? model_output_size_ - offset : I2CCOMM_MAX_PAYLOAD_SIZE;
+        
+        // prepare write buffer for write process
+        gWrite_buf[iic_id][I2CFMT_FEATURE_OFFSET] = I2CCOMM_FEATURE_ACCURACY_RESULT;
+        gWrite_buf[iic_id][I2CFMT_COMMAND_OFFSET] = 0x0;
+        gWrite_buf[iic_id][I2CFMT_PAYLOADLEN_MSB_OFFSET] = (chunk_size >> 8) & 0xFF;
+        gWrite_buf[iic_id][I2CFMT_PAYLOADLEN_LSB_OFFSET] = chunk_size & 0xFF;
+
+        memcpy(&gWrite_buf[iic_id][I2CFMT_PAYLOAD_OFFSET], output_tensor_ + offset, chunk_size);
+
+        // Checksum
+        auto retval2 = hx_lib_i2ccomm_generate_checksum((unsigned char *) &gWrite_buf[iic_id], I2CCOMM_HEADER_SIZE + chunk_size, &checksum);
+
+        if (retval2 == I2CCOMM_NO_ERROR)
+        {
+            dbg_evt_iics_cmd("checksum generation : 0x%04x \n", checksum);
+            gWrite_buf[iic_id][I2CCOMM_HEADER_SIZE + chunk_size] = checksum & 0xFF;
+            gWrite_buf[iic_id][I2CCOMM_HEADER_SIZE + chunk_size + 1] = (checksum >> DATA_SFT_OFFSET_8) & 0xFF;
+        }
+        else
+        {
+            dbg_evt_iics_cmd("[Warning] i2c cmd - checksum generation : FAIL\n");
+            gWrite_buf[iic_id][I2CCOMM_HEADER_SIZE + chunk_size] = 0xFF;
+            gWrite_buf[iic_id][I2CCOMM_HEADER_SIZE + chunk_size + 1] = 0xFF;
+        }
+
+        xprintf("I2CCOMM_FEATURE_ACCURACY_RESULT offset=%d, chunk_size=%d\n", offset, chunk_size);
+
+        hx_CleanDCache_by_Addr((void *)&gWrite_buf[iic_id], I2CCOMM_MAX_RBUF_SIZE);
+        hx_lib_i2ccomm_enable_write(iic_id, (unsigned char *)&gWrite_buf[iic_id]);
         break;
     default:
         xprintf("I2CCOMM_FEATURE_UNKNOWN: 0x%02x\n", feature);

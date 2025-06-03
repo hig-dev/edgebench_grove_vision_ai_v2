@@ -58,7 +58,8 @@ typedef enum
     I2CCOMM_FEATURE_INPUT                = 0x03, /**< Set input for test mode*/
     I2CCOMM_FEATURE_STATUS               = 0x04, /**< Status*/
     I2CCOMM_FEATURE_CMD                  = 0x05, /**< Command*/
-    I2CCOMM_FEATURE_RESULT               = 0x06, /**< Result*/  
+    I2CCOMM_FEATURE_LATENCY_RESULT       = 0x06, /**< Latency Result*/
+    I2CCOMM_FEATURE_ACCURACY_RESULT      = 0x07, /**< Accuracy Result*/
 } I2CCOMM_FEATURE_E;
 
 
