@@ -45,7 +45,7 @@ size_t model_output_size_ = 0;
 #endif
 #endif
 
-#define TENSOR_ARENA_BUFSIZE (1575 * 1024)
+#define TENSOR_ARENA_BUFSIZE (1802 * 1024)
 __attribute__((section(".bss.NoInit"))) uint8_t tensor_arena_buf[TENSOR_ARENA_BUFSIZE] __ALIGNED(32);
 
 using namespace std;
@@ -130,7 +130,7 @@ int cv_init(bool security_enable, bool privilege_enable)
 		xprintf("model's schema version %d\n", model->version());
 	}
 
-	#if IS_EFFICIENTVIT
+	#if MODEL_VARIANT == MODEL_VARIANT_EFFICIENTVIT
 	xprintf("EfficientVit model\n");
 	static tflite::MicroMutableOpResolver<8> op_resolver;
 	op_resolver.AddQuantize();
@@ -140,6 +140,18 @@ int cv_init(bool security_enable, bool privilege_enable)
 	op_resolver.AddTranspose();
 	op_resolver.AddRelu();
 	op_resolver.AddDiv();
+	#elif MODEL_VARIANT == MODEL_VARIANT_DEIT
+	xprintf("DeiT model\n");
+	static tflite::MicroMutableOpResolver<8> op_resolver;
+	op_resolver.AddConv2D();
+	op_resolver.AddTranspose();
+	op_resolver.AddMul();
+	op_resolver.AddReshape();
+	op_resolver.AddGather();
+	op_resolver.AddBatchMatMul();
+	// Deit model fails with:
+	// Didn't find op for builtin opcode 'GELU'
+	// Failed to get registration from op code GELU
 	#else
 	xprintf("MobileOne model\n");
 	static tflite::MicroMutableOpResolver<1> op_resolver;
