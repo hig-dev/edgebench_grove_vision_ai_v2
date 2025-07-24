@@ -292,6 +292,8 @@ uint8_t evt_i2ccomm_0_rx_cb(void)
         return -1;
     }
 
+    hx_drv_gpio_set_out_value(AON_GPIO0, GPIO_OUT_LOW); // Set GPIO0 output low
+
     switch (feature)
     {
     case I2CCOMM_FEATURE_MODE:
@@ -349,6 +351,7 @@ uint8_t evt_i2ccomm_0_rx_cb(void)
                 }
                 // Latency test
                 latency_result_ms_ = cv_inference_test(iterations_);
+                hx_drv_gpio_set_out_value(AON_GPIO0, GPIO_OUT_HIGH); // Set GPIO0 output high
             }
             else if (mode_ == I2CCOMM_ACCURACY_TEST_MODE)
             {
@@ -370,6 +373,7 @@ uint8_t evt_i2ccomm_0_rx_cb(void)
                 // Accuracy test
                 if (cv_accuracy_test())
                 {
+                    hx_drv_gpio_set_out_value(AON_GPIO0, GPIO_OUT_HIGH); // Set GPIO0 output high
                     input_bytes_written_ = 0; // Reset for next input
                     xprintf("I2CCOMM_FEATURE_CMD cv_accuracy_test passed\n");
                     uint16_t output_crc = el_crc16_maxim((const uint8_t *)output_tensor_, model_output_size_);

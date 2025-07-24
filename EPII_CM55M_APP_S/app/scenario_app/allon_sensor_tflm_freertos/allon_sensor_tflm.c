@@ -55,7 +55,6 @@
 #include "app_state.h"
 #include "comm_task.h"
 #include "cvapp.h"
-#include "sleep_mode.h"
 #include "pinmux_cfg.h"
 
 #define DEAULT_XHSUTDOWN_PIN AON_GPIO2
@@ -98,9 +97,6 @@ void pinmux_init()
 	/* Init UART0 pin mux to PB0 and PB1 */
 	uart0_pinmux_cfg(&pinmux_cfg);
 
-	/* Init AON_GPIO1 pin mux to PA1 for OV5647 enable pin */
-	aon_gpio1_pinmux_cfg(&pinmux_cfg);
-
 	/* Init I2C slave 0 pin mux to PA2, PA3 (SCL, SDA)*/
 	i2cs0_pinmux_cfg(&pinmux_cfg);
 
@@ -121,6 +117,11 @@ int app_main(void)
 	pinmux_init();
 
 	dbg_printf(DBG_LESS_INFO, "freertos rtos_app\r\n");
+
+	// Configure PA0(D0) as GPIO0
+	hx_drv_gpio_set_output(AON_GPIO0, GPIO_OUT_LOW);
+	hx_drv_scu_set_PA0_pinmux(SCU_PA0_PINMUX_AON_GPIO0_2, 1);
+
 
 	g_maintask_state = APP_MAIN_TASK_STATE_UNINIT;
 	g_commtask_state = APP_COMM_TASK_STATE_UNINIT;
